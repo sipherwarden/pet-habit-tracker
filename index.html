@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HabitPet - Tamagotchi Habit Tracker</title>
+  <style>
+    :root {
+      --bg: #fdfbf7;
+      --card-bg: #ffffff;
+      --primary: #ff85a2;
+      --primary-light: #ffd5df;
+      --accent: #ffb703;
+      --text: #2f2e41;
+      --text-muted: #8c8b98;
+      --border: #f0e6e6;
+      --success: #52b788;
+      --radius: 20px;
+      --shadow: 0 8px 24px rgba(149, 157, 165, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 24px 16px;
+      min-height: 100vh;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 14px 20px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .points-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff8e6;
+      color: #b7791f;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      border: 1px solid #fef08a;
+    }
+
+    /* Pet Stage */
+    .pet-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pet-stage {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      margin: 10px auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle, #fff0f3 0%, rgba(255,255,255,0) 70%);
+      border-radius: 50%;
+    }
+
+    .pet-avatar {
+      font-size: 72px;
+      user-select: none;
+      transition: transform 0.25s ease;
+      cursor: pointer;
+      display: inline-block;
+      animation: gentle-bob 2.5s infinite ease-in-out;
+    }
+
+    .pet-avatar:active {
+      transform: scale(1.15) rotate(-6deg);
+    }
+
+    @keyframes gentle-bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .pet-hat {
+      position: absolute;
+      top: 10px;
+      font-size: 32px;
+    }
+
+    .pet-info h2 {
+      font-size: 1.35rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .pet-level-badge {
+      font-size: 0.8rem;
+      background: var(--primary-light);
+      color: #b02a4e;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+
+    .pet-speech {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      min-height: 22px;
+      font-style: italic;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 14px;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .stat-box {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .stat-bar-outer {
+      height: 8px;
+      background: #f1f2f6;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .stat-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.35s ease;
+    }
+
+    .fill-hunger { background-color: #ff9f43; }
+    .fill-happy { background-color: #ff6b81; }
+    .fill-clean { background-color: #54a0ff; }
+    .fill-energy { background-color: #1dd1a1; }
+
+    /* Action Buttons */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .action-btn {
+      background: #fdf2f4;
+      border: 1px solid var(--primary-light);
+      border-radius: 12px;
+      padding: 10px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--text);
+    }
+
+    .action-btn:hover {
+      background: var(--primary-light);
+      transform: translateY(-2px);
+    }
+
+    .action-btn span.emoji {
+      font-size: 1.3rem;
+    }
+
+    .action-btn span.label {
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .action-btn span.cost {
+      font-size: 0.65rem;
+      color: #9c4257;
+      font-weight: 700;
+    }
+
+    /* Habits Section */
+    .habits-container {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .habit-input-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .habit-input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .habit-input:focus {
+      border-color: var(--primary);
+    }
+
+    .reward-select {
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 0 8px;
+      background: white;
+      font-size: 0.85rem;
+      outline: none;
+      color: var(--text);
+    }
+
+    .btn-add {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0 16px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+    }
+
+    .btn-add:hover {
+      opacity: 0.9;
+    }
+
+    .habit-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .habit-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #fafafa;
+      transition: all 0.2s ease;
+    }
+
+    .habit-item.completed {
+      background: #f4fdf8;
+      border-color: #d1f4e0;
+      opacity: 0.7;
+    }
+
+    .habit-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .habit-checkbox {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--success);
+      cursor: pointer;
+    }
+
+    .habit-text {
+      font-size: 0.92rem;
+      font-weight: 500;
+    }
+
+    .habit-item.completed .habit-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .habit-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .points-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: #fff3c4;
+      color: #996500;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .btn-del {
+      background: none;
+      border: none;
+      color: #d88;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .btn-del:hover {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    /* Floating Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--text);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Top Status Bar -->
+    <div class="top-bar">
+      <div>
+        <span style="font-weight: 700; font-size: 1.05rem;">🐾 HabitPet</span>
+      </div>
+      <div class="points-badge">
+        <span>⭐</span>
+        <span id="ptsCounter">0</span>
+        <span style="font-size: 0.75rem; font-weight: 600;">pts</span>
+      </div>
+    </div>
+
+    <!-- Pet Display & Controls -->
+    <div class="pet-card">
+      <div class="pet-stage">
+        <div id="petHat" class="pet-hat"></div>
+        <div id="petAvatar" class="pet-avatar" onclick="petClickReaction()">🐱</div>
+      </div>
+      
+      <div class="pet-info">
+        <h2>
+          <span id="petName">Mochi</span>
+          <span id="petLvl" class="pet-level-badge">Lvl 1 Baby Cat</span>
+        </h2>
+        <div id="petSpeech" class="pet-speech">"Ready to knock out some goals!"</div>
+      </div>
+
+      <!-- Vitals -->
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-header">
+            <span>🍗 Hunger</span>
+            <span id="valHunger">80%</span>
+          </div>
+          <div class="stat-bar-outer">
+            <div id="barHunger" class="stat-bar-fill fill-hunger" style="width: 80%;"></div>
+          </div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-header">
+            <span>💖 Happiness</span>
+            <span id="valHappy">75%</span>
+          </div>
+          <div class="stat-bar-outer">
+            <div id="barHappy" class="stat-bar-fill fill-happy" style="width: 75%;"></div>
+          </div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-header">
+            <span>🧼 Cleanliness</span>
+            <span id="valClean">90%</span>
+          </div>
+          <div class="stat-bar-outer">
+            <div id="barClean" class="stat-bar-fill fill-clean" style="width: 90%;"></div>
+          </div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-header">
+            <span>⚡ Energy</span>
+            <span id="valEnergy">60%</span>
+          </div>
+          <div class="stat-bar-outer">
+            <div id="barEnergy" class="stat-bar-fill fill-energy" style="width: 60%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Pad -->
+      <div class="actions-grid">
+        <button class="action-btn" onclick="careAction('feed', 10)">
+          <span class="emoji">🐟</span>
+          <span class="label">Feed</span>
+          <span class="cost">10 pts</span>
+        </button>
+
+        <button class="action-btn" onclick="careAction('play', 15)">
+          <span class="emoji">🎾</span>
+          <span class="label">Play</span>
+          <span class="cost">15 pts</span>
+        </button>
+
+        <button class="action-btn" onclick="careAction('shower', 10)">
+          <span class="emoji">🚿</span>
+          <span class="label">Shower</span>
+          <span class="cost">10 pts</span>
+        </button>
+
+        <button class="action-btn" onclick="careAction('walk', 20)">
+          <span class="emoji">🌲</span>
+          <span class="label">Walk</span>
+          <span class="cost">20 pts</span>
+        </button>
+
+        <button class="action-btn" onclick="upgradePet()">
+          <span class="emoji">👑</span>
+          <span class="label">Upgrade</span>
+          <span id="upgCost" class="cost">50 pts</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Habit Manager -->
+    <div class="habits-container">
+      <div class="section-title">
+        <span>Today's Habits & Tasks</span>
+        <button onclick="resetDailyChecks()" style="background: none; border: none; font-size: 0.8rem; color: var(--primary); cursor: pointer; font-weight: 600;">Reset Checks</button>
+      </div>
+
+      <form class="habit-input-form" onsubmit="addHabit(event)">
+        <input 
+          id="habitTitle" 
+          type="text" 
+          class="habit-input" 
+          placeholder="Add habit (e.g. Drink 2L water)..." 
+          required 
+        />
+        <select id="habitPoints" class="reward-select">
+          <option value="10">+10 pt</option>
+          <option value="20" selected>+20 pt</option>
+          <option value="30">+30 pt</option>
+          <option value="50">+50 pt</option>
+        </select>
+        <button type="submit" class="btn-add">+</button>
+      </form>
+
+      <ul id="habitList" class="habit-list"></ul>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Action
