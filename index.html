@@ -372,4 +372,603 @@
       justify-content: space-between;
       padding: 12px 14px;
       border: 1.5px solid var(--border);
+      border-radius: 14px;
+      background: #fafafa;
+      transition: all 0.2s ease;
+    }
+
+    .habit-item.completed {
+      background: #f3faf6;
+      border-color: #bbf7d0;
+      opacity: 0.65;
+    }
+
+    .habit-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .habit-checkbox {
+      width: 22px;
+      height: 22px;
+      accent-color: var(--success);
+      cursor: pointer;
+    }
+
+    .habit-text {
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .habit-item.completed .habit-text {
+      text-decoration: line-through;
+    }
+
+    .habit-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .points-tag {
+      font-size: 0.72rem;
+      font-weight: 800;
+      background: #fff3c4;
+      color: #855b00;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .btn-del {
+      background: none;
+      border: none;
+      color: #ffa8a8;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+
+    /* Modal (Mini-game & Wardrobe) */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-content {
+      background: white;
+      border-radius: var(--radius);
+      padding: 20px;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+      position: relative;
+    }
+
+    .yarn-field {
+      width: 100%;
+      height: 200px;
+      background: #fdf2f4;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      margin: 12px 0;
+      border: 2px dashed #fcc2d7;
+    }
+
+    .yarn-target {
+      position: absolute;
+      font-size: 32px;
+      cursor: pointer;
+      user-select: none;
+      transition: top 0.3s ease, left 0.3s ease;
+    }
+
+    .wardrobe-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .wardrobe-item {
+      padding: 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-size: 1.8rem;
+      cursor: pointer;
+    }
+
+    /* Floating Heart/Coin Animation */
+    .particle {
+      position: absolute;
+      pointer-events: none;
+      font-weight: 800;
+      font-size: 1.2rem;
+      animation: float-away 1s forwards ease-out;
+      z-index: 50;
+    }
+
+    @keyframes float-away {
+      0% { opacity: 1; transform: translate(0, 0) scale(0.8); }
+      100% { opacity: 0; transform: translate(var(--dx), -60px) scale(1.3); }
+    }
+  </style>
+</head>
+<body class="theme-room">
+
+  <div class="app-container">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="brand">🐾 <span>HabitPet</span></div>
+      <div class="header-actions">
+        <button class="theme-toggle-btn" onclick="cycleTheme()" title="Switch Environment">🎨</button>
+        <div id="ptsBadge" class="points-badge">
+          <span>⭐</span>
+          <span id="ptsCounter">25</span>
+          <span style="font-size: 0.72rem;">pts</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pet Card -->
+    <div class="pet-card">
+      <div class="stage-canvas" onclick="petTap(event)">
+        <div id="petHat" class="hat-layer"></div>
+        <div id="petAvatar" class="pet-avatar">🐱</div>
+      </div>
+
+      <div class="pet-name-tag">
+        <span id="petName">Mochi</span>
+        <span id="petLvl" class="lvl-badge">Lvl 1 Baby Cat</span>
+      </div>
+      <div id="petSpeech" class="pet-speech">"Tap me or complete habits to play!"</div>
+
+      <!-- Vitals -->
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-header"><span>🍗 Hunger</span><span id="valHunger">80%</span></div>
+          <div class="stat-bar-outer"><div id="barHunger" class="stat-bar-fill fill-hunger" style="width: 80%;"></div></div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-header"><span>💖 Joy</span><span id="valHappy">75%</span></div>
+          <div class="stat-bar-outer"><div id="barHappy" class="stat-bar-fill fill-happy" style="width: 75%;"></div></div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-header"><span>🧼 Clean</span><span id="valClean">90%</span></div>
+          <div class="stat-bar-outer"><div id="barClean" class="stat-bar-fill fill-clean" style="width: 90%;"></div></div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-header"><span>⚡ Energy</span><span id="valEnergy">60%</span></div>
+          <div class="stat-bar-outer"><div id="barEnergy" class="stat-bar-fill fill-energy" style="width: 60%;"></div></div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions-grid">
+        <button class="action-btn" onclick="careAction('feed', 10)">
+          <span class="emoji">🐟</span><span class="label">Feed</span><span class="cost">10 pts</span>
+        </button>
+        <button class="action-btn" onclick="careAction('play', 15)">
+          <span class="emoji">🎾</span><span class="label">Play</span><span class="cost">15 pts</span>
+        </button>
+        <button class="action-btn" onclick="careAction('shower', 10)">
+          <span class="emoji">🚿</span><span class="label">Shower</span><span class="cost">10 pts</span>
+        </button>
+        <button class="action-btn" onclick="careAction('walk', 20)">
+          <span class="emoji">🌲</span><span class="label">Walk</span><span class="cost">20 pts</span>
+        </button>
+        <button class="action-btn" onclick="upgradePet()">
+          <span class="emoji">👑</span><span class="label">Evolve</span><span id="upgCost" class="cost">50 pts</span>
+        </button>
+      </div>
+
+      <!-- Extra Features -->
+      <div class="sub-features">
+        <button class="sub-btn" onclick="openMiniGame()">🧶 Mini-Game: Catch Yarn</button>
+        <button class="sub-btn" onclick="openWardrobe()">🎀 Dress Up</button>
+      </div>
+    </div>
+
+    <!-- Habit Manager -->
+    <div class="habits-container">
+      <div class="section-title">
+        <span>Today's Tasks</span>
+        <button onclick="resetChecks()" style="background:none; border:none; font-size:0.75rem; color:var(--primary); font-weight:700; cursor:pointer;">Reset Checks</button>
+      </div>
+
+      <div class="quick-tags">
+        <button class="tag-btn" onclick="quickAdd('Drink 1L water', 10)">+ 💧 Water (10p)</button>
+        <button class="tag-btn" onclick="quickAdd('15m Quick clean up', 20)">+ 🧹 Tidy (20p)</button>
+        <button class="tag-btn" onclick="quickAdd('20m Focused walk', 25)">+ 🚶 Walk (25p)</button>
+      </div>
+
+      <form class="habit-input-form" onsubmit="addHabit(event)">
+        <input id="habitTitle" type="text" class="habit-input" placeholder="New habit..." required />
+        <select id="habitPoints" class="reward-select">
+          <option value="10">+10 pt</option>
+          <option value="20" selected>+20 pt</option>
+          <option value="30">+30 pt</option>
+          <option value="50">+50 pt</option>
+        </select>
+        <button type="submit" class="btn-add">+</button>
+      </form>
+
+      <ul id="habitList" class="habit-list"></ul>
+    </div>
+  </div>
+
+  <!-- Mini-Game Modal -->
+  <div id="gameModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3>🧶 Catch the Yarn!</h3>
+      <p style="font-size:0.82rem; color:var(--text-muted);">Tap the ball 5 times before time runs out!</p>
+      <div class="yarn-field" id="yarnField">
+        <div id="yarnTarget" class="yarn-target" onclick="hitYarn()">🧶</div>
+      </div>
+      <div style="font-weight:700; margin-bottom:10px;">Score: <span id="yarnScore">0</span> / 5</div>
+      <button class="btn-add" style="width:100%; font-size:0.9rem; padding:10px;" onclick="closeModal('gameModal')">Close</button>
+    </div>
+  </div>
+
+  <!-- Wardrobe Modal -->
+  <div id="wardrobeModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3>🎀 Pet Wardrobe</h3>
+      <p style="font-size:0.82rem; color:var(--text-muted);">Pick an accessory:</p>
+      <div class="wardrobe-grid">
+        <div class="wardrobe-item" onclick="setHat('')">🚫</div>
+        <div class="wardrobe-item" onclick="setHat('🎀')">🎀</div>
+        <div class="wardrobe-item" onclick="setHat('😎')">😎</div>
+        <div class="wardrobe-item" onclick="setHat('🥳')">🥳</div>
+        <div class="wardrobe-item" onclick="setHat('👑')">👑</div>
+        <div class="wardrobe-item" onclick="setHat('🎓')">🎓</div>
+        <div class="wardrobe-item" onclick="setHat('🧙')">🧙</div>
+        <div class="wardrobe-item" onclick="setHat('🌸')">🌸</div>
+      </div>
+      <button class="btn-add" style="width:100%; font-size:0.9rem; padding:10px;" onclick="closeModal('wardrobeModal')">Done</button>
+    </div>
+  </div>
+
+  <script>
+    // Audio Synthesizer (Zero External Files)
+    const AudioEngine = {
+      ctx: null,
+      init() {
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+      },
+      playTone(freq, type, duration, endFreq = null) {
+        try {
+          this.init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, this.ctx.currentTime + duration);
+          gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch(e) {}
+      },
+      coin() { this.playTone(987.77, 'sine', 0.1); setTimeout(() => this.playTone(1318.51, 'sine', 0.2), 90); },
+      meow() { this.playTone(450, 'triangle', 0.22, 650); },
+      crunch() { this.playTone(200, 'square', 0.08, 100); },
+      splash() { this.playTone(350, 'sine', 0.18, 180); },
+      fanfare() {
+        [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+          setTimeout(() => this.playTone(f, 'triangle', 0.18), i * 110);
+        });
+      }
+    };
+
+    // State & Evolutions
+    const EVOLUTIONS = [
+      { level: 1, title: "Baby Cat", avatar: "🐱", baseSpeech: "Purr~ Ready to knock out some goals!" },
+      { level: 2, title: "Curious Explorer", avatar: "😺", baseSpeech: "Ooh! What habit are we doing next?" },
+      { level: 3, title: "Ninja Cat", avatar: "😼", baseSpeech: "Disciplined and focused!" },
+      { level: 4, title: "Habit Royal", avatar: "😻", baseSpeech: "We run this empire of productivity!" },
+      { level: 5, title: "Celestial Tiger", avatar: "🐯", baseSpeech: "Ascended form! Nothing can stop us!" }
+    ];
+
+    let state = {
+      points: 25,
+      pet: { level: 1, hunger: 80, happy: 75, clean: 90, energy: 65, hat: "" },
+      habits: [
+        { id: 1, text: "Make the bed", pts: 10, done: false },
+        { id: 2, text: "20m Workout or Stretch", pts: 20, done: false },
+        { id: 3, text: "Tidy up desk", pts: 15, done: false }
+      ]
+    };
+
+    function saveState() {
+      localStorage.setItem("habit_pet_v2", JSON.stringify(state));
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem("habit_pet_v2");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          state.points = Number(parsed.points) || 0;
+          state.pet = { ...state.pet, ...parsed.pet };
+          if (Array.isArray(parsed.habits) && parsed.habits.length > 0) state.habits = parsed.habits;
+        } catch(e) {}
+      }
+    }
+
+    // Dynamic Expressions & Rendering
+    function getPetExpression() {
+      const evo = EVOLUTIONS.find(e => e.level === state.pet.level) || EVOLUTIONS[0];
+      if (state.pet.hunger < 30) return "😿";
+      if (state.pet.happy < 30) return "😾";
+      if (state.pet.energy < 25) return "😴";
+      if (state.pet.happy > 85) return "😻";
+      return evo.avatar;
+    }
+
+    function render() {
+      document.getElementById("ptsCounter").innerText = state.points;
       
+      const evo = EVOLUTIONS.find(e => e.level === state.pet.level) || EVOLUTIONS[EVOLUTIONS.length - 1];
+      document.getElementById("petAvatar").innerText = getPetExpression();
+      document.getElementById("petHat").innerText = state.pet.hat;
+      document.getElementById("petLvl").innerText = `Lvl ${state.pet.level} ${evo.title}`;
+      
+      const upgCost = state.pet.level * 50;
+      document.getElementById("upgCost").innerText = state.pet.level >= 5 ? "MAX" : `${upgCost} pts`;
+
+      // Stat bars
+      const stats = [
+        { id: "Hunger", val: state.pet.hunger },
+        { id: "Happy", val: state.pet.happy },
+        { id: "Clean", val: state.pet.clean },
+        { id: "Energy", val: state.pet.energy }
+      ];
+
+      stats.forEach(s => {
+        const clamped = Math.max(0, Math.min(100, Math.round(s.val)));
+        document.getElementById(`val${s.id}`).innerText = `${clamped}%`;
+        document.getElementById(`bar${s.id}`).style.width = `${clamped}%`;
+      });
+
+      // Habits
+      const listEl = document.getElementById("habitList");
+      listEl.innerHTML = "";
+      state.habits.forEach(h => {
+        const li = document.createElement("li");
+        li.className = `habit-item ${h.done ? 'completed' : ''}`;
+        li.innerHTML = `
+          <div class="habit-left">
+            <input type="checkbox" class="habit-checkbox" ${h.done ? 'checked' : ''} onchange="toggleHabit(${h.id}, event)" />
+            <span class="habit-text">${h.text}</span>
+          </div>
+          <div class="habit-meta">
+            <span class="points-tag">+${h.pts} pts</span>
+            <button class="btn-del" onclick="deleteHabit(${h.id})">×</button>
+          </div>
+        `;
+        listEl.appendChild(li);
+      });
+    }
+
+    // Particle Burst
+    function spawnParticle(x, y, text) {
+      const p = document.createElement("div");
+      p.className = "particle";
+      p.innerText = text;
+      p.style.left = `${x}px`;
+      p.style.top = `${y}px`;
+      p.style.setProperty('--dx', `${(Math.random() - 0.5) * 60}px`);
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1000);
+    }
+
+    // Interactions
+    function petTap(e) {
+      AudioEngine.meow();
+      const avatar = document.getElementById("petAvatar");
+      avatar.classList.remove("bounce");
+      void avatar.offsetWidth;
+      avatar.classList.add("bounce");
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      spawnParticle(rect.left + rect.width / 2, rect.top + 30, "💖");
+
+      const speeches = ["Purrr~", "Head scritches are the best!", "*Happy tail wag*", "Meow! Keep checking habits off!"];
+      document.getElementById("petSpeech").innerText = speeches[Math.floor(Math.random() * speeches.length)];
+    }
+
+    function careAction(type, cost) {
+      if (state.points < cost) {
+        document.getElementById("petSpeech").innerText = "⚠️ Need more points! Finish a habit first.";
+        return;
+      }
+      state.points -= cost;
+
+      switch(type) {
+        case 'feed':
+          AudioEngine.crunch();
+          state.pet.hunger = Math.min(100, state.pet.hunger + 30);
+          state.pet.energy = Math.min(100, state.pet.energy + 5);
+          document.getElementById("petSpeech").innerText = "*Chomp chomp* Delicious meal! (+30 Hunger)";
+          break;
+        case 'play':
+          AudioEngine.meow();
+          state.pet.happy = Math.min(100, state.pet.happy + 35);
+          state.pet.hunger = Math.max(0, state.pet.hunger - 10);
+          state.pet.energy = Math.max(0, state.pet.energy - 10);
+          document.getElementById("petSpeech").innerText = "Zoomies activated! Wheee! (+35 Joy)";
+          break;
+        case 'shower':
+          AudioEngine.splash();
+          state.pet.clean = 100;
+          state.pet.happy = Math.min(100, state.pet.happy + 10);
+          document.getElementById("petSpeech").innerText = "Squeaky clean and smelling fresh! (+Clean)";
+          break;
+        case 'walk':
+          AudioEngine.fanfare();
+          state.pet.happy = Math.min(100, state.pet.happy + 25);
+          state.pet.energy = Math.max(0, state.pet.energy - 20);
+          state.pet.clean = Math.max(0, state.pet.clean - 15);
+          document.getElementById("petSpeech").innerText = "Explored outside and sniffed everything!";
+          break;
+      }
+
+      saveState();
+      render();
+    }
+
+    function upgradePet() {
+      if (state.pet.level >= 5) {
+        document.getElementById("petSpeech").innerText = "🌟 Maximum celestial evolution reached!";
+        return;
+      }
+      const cost = state.pet.level * 50;
+      if (state.points < cost) {
+        document.getElementById("petSpeech").innerText = `⚠️ Need ${cost} points to evolve!`;
+        return;
+      }
+      state.points -= cost;
+      state.pet.level += 1;
+      state.pet.hunger = 100;
+      state.pet.happy = 100;
+      state.pet.clean = 100;
+      state.pet.energy = 100;
+      AudioEngine.fanfare();
+      document.getElementById("petSpeech").innerText = `✨ EVOLUTION! Upgraded to Level ${state.pet.level}!`;
+      saveState();
+      render();
+    }
+
+    // Habits & Points System
+    function toggleHabit(id, e) {
+      const habit = state.habits.find(h => h.id === id);
+      if (!habit) return;
+      habit.done = !habit.done;
+
+      const pts = Number(habit.pts);
+      if (habit.done) {
+        state.points += pts;
+        AudioEngine.coin();
+        if (e && e.target) {
+          const rect = e.target.getBoundingClientRect();
+          spawnParticle(rect.left + 20, rect.top, `+${pts} ⭐`);
+        }
+        const badge = document.getElementById("ptsBadge");
+        badge.classList.add("bump");
+        setTimeout(() => badge.classList.remove("bump"), 300);
+        document.getElementById("petSpeech").innerText = `Great job completing "${habit.text}"!`;
+      } else {
+        state.points = Math.max(0, state.points - pts);
+      }
+
+      saveState();
+      render();
+    }
+
+    function addHabit(e) {
+      e.preventDefault();
+      const input = document.getElementById("habitTitle");
+      const ptsSelect = document.getElementById("habitPoints");
+      const title = input.value.trim();
+      if (!title) return;
+
+      state.habits.push({
+        id: Date.now(),
+        text: title,
+        pts: Number(ptsSelect.value),
+        done: false
+      });
+
+      input.value = "";
+      saveState();
+      render();
+    }
+
+    function quickAdd(text, pts) {
+      state.habits.push({ id: Date.now(), text, pts: Number(pts), done: false });
+      saveState();
+      render();
+    }
+
+    function deleteHabit(id) {
+      state.habits = state.habits.filter(h => h.id !== id);
+      saveState();
+      render();
+    }
+
+    function resetChecks() {
+      state.habits.forEach(h => h.done = false);
+      saveState();
+      render();
+    }
+
+    // Mini-Game
+    let yarnScore = 0;
+    function openMiniGame() {
+      yarnScore = 0;
+      document.getElementById("yarnScore").innerText = yarnScore;
+      document.getElementById("gameModal").classList.add("active");
+      moveYarn();
+    }
+
+    function moveYarn() {
+      const target = document.getElementById("yarnTarget");
+      const top = Math.floor(Math.random() * 140) + 10;
+      const left = Math.floor(Math.random() * 260) + 10;
+      target.style.top = `${top}px`;
+      target.style.left = `${left}px`;
+    }
+
+    function hitYarn() {
+      yarnScore++;
+      AudioEngine.crunch();
+      document.getElementById("yarnScore").innerText = yarnScore;
+      if (yarnScore >= 5) {
+        AudioEngine.coin();
+        state.points += 15;
+        state.pet.happy = Math.min(100, state.pet.happy + 20);
+        closeModal('gameModal');
+        document.getElementById("petSpeech").innerText = "🎉 Won yarn mini-game! (+15 pts, +20 Joy)";
+        saveState();
+        render();
+      } else {
+        moveYarn();
+      }
+    }
+
+    // Wardrobe & Themes
+    function openWardrobe() { document.getElementById("wardrobeModal").classList.add("active"); }
+    function closeModal(id) { document.getElementById(id).classList.remove("active"); }
+    function setHat(hat) {
+      state.pet.hat = hat;
+      saveState();
+      render();
+    }
+
+    const themes = ["theme-room", "theme-meadow", "theme-night"];
+    let currentThemeIdx = 0;
+    function cycleTheme() {
+      currentThemeIdx = (currentThemeIdx + 1) % themes.length;
+      document.body.className = themes[currentThemeIdx];
+    }
+
+    // Launch
+    loadState();
+    render();
+  </script>
+</body>
+</html>
