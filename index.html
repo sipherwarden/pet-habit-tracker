@@ -2,45 +2,60 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HabitPet - Tamagotchi Habit Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>HabitPet DX</title>
   <style>
     :root {
-      --bg: #fdfbf7;
+      --bg: #fffbf5;
       --card-bg: #ffffff;
-      --primary: #ff85a2;
-      --primary-light: #ffd5df;
+      --primary: #ff7597;
+      --primary-hover: #ff527d;
       --accent: #ffb703;
-      --text: #2f2e41;
-      --text-muted: #8c8b98;
-      --border: #f0e6e6;
-      --success: #52b788;
-      --radius: 20px;
-      --shadow: 0 8px 24px rgba(149, 157, 165, 0.12);
+      --text: #2d3142;
+      --text-muted: #8d99ae;
+      --border: #f0e6e8;
+      --success: #38b000;
+      --radius: 24px;
+      --shadow: 0 10px 30px rgba(160, 140, 150, 0.12);
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background-color: var(--bg);
+      background: var(--bg);
       color: var(--text);
       display: flex;
       justify-content: center;
-      padding: 24px 16px;
+      padding: 16px 16px 40px;
       min-height: 100vh;
+      transition: background 0.4s ease;
     }
+
+    /* Environment Themes */
+    body.theme-room { background: #fff8f0; }
+    body.theme-meadow { background: #f0fdf4; }
+    body.theme-night { background: #0f172a; color: #f8fafc; }
+    body.theme-night .pet-card, body.theme-night .habits-container, body.theme-night .top-bar {
+      background: #1e293b;
+      color: #f8fafc;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    body.theme-night .habit-item { background: #334155; border-color: #475569; color: #f8fafc; }
+    body.theme-night .pet-speech { color: #94a3b8; }
+    body.theme-night .stat-bar-outer { background: #334155; }
 
     .app-container {
       width: 100%;
-      max-width: 480px;
+      max-width: 440px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 16px;
     }
 
     /* Top Bar */
@@ -49,91 +64,127 @@
       justify-content: space-between;
       align-items: center;
       background: var(--card-bg);
-      padding: 14px 20px;
+      padding: 12px 18px;
       border-radius: var(--radius);
       box-shadow: var(--shadow);
+    }
+
+    .brand {
+      font-weight: 800;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
     }
 
     .points-badge {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       background: #fff8e6;
       color: #b7791f;
       padding: 6px 14px;
       border-radius: 999px;
-      font-weight: 700;
-      font-size: 1.05rem;
-      border: 1px solid #fef08a;
+      font-weight: 800;
+      font-size: 1rem;
+      border: 1.5px solid #fef08a;
+      transition: transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    .points-badge.bump {
+      transform: scale(1.15);
+    }
+
+    .theme-toggle-btn {
+      background: none;
+      border: 1px solid var(--border);
+      font-size: 1.1rem;
+      padding: 6px 10px;
+      border-radius: 12px;
+      cursor: pointer;
     }
 
     /* Pet Stage */
     .pet-card {
       background: var(--card-bg);
       border-radius: var(--radius);
-      padding: 24px 20px;
+      padding: 22px 18px;
       text-align: center;
       box-shadow: var(--shadow);
       position: relative;
-      overflow: hidden;
     }
 
-    .pet-stage {
+    .stage-canvas {
       position: relative;
-      width: 150px;
-      height: 150px;
-      margin: 10px auto 16px;
+      width: 170px;
+      height: 170px;
+      margin: 0 auto 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle, #fff0f3 0%, rgba(255,255,255,0) 70%);
       border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,182,193,0.25) 0%, rgba(255,255,255,0) 70%);
+      cursor: pointer;
     }
 
     .pet-avatar {
-      font-size: 72px;
+      font-size: 80px;
       user-select: none;
-      transition: transform 0.25s ease;
-      cursor: pointer;
       display: inline-block;
-      animation: gentle-bob 2.5s infinite ease-in-out;
+      transform-origin: bottom center;
+      animation: idle-float 3s infinite ease-in-out;
+      transition: transform 0.15s ease;
     }
 
-    .pet-avatar:active {
-      transform: scale(1.15) rotate(-6deg);
+    .pet-avatar.bounce {
+      animation: squish 0.35s ease;
     }
 
-    @keyframes gentle-bob {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
+    @keyframes idle-float {
+      0%, 100% { transform: translateY(0) scale(1, 1); }
+      50% { transform: translateY(-7px) scale(1.02, 0.98); }
     }
 
-    .pet-hat {
+    @keyframes squish {
+      0% { transform: scale(1, 1); }
+      30% { transform: scale(1.25, 0.75); }
+      60% { transform: scale(0.85, 1.15) translateY(-14px); }
+      100% { transform: scale(1, 1); }
+    }
+
+    .hat-layer {
       position: absolute;
-      top: 10px;
-      font-size: 32px;
+      top: 14px;
+      font-size: 34px;
+      pointer-events: none;
+      z-index: 2;
     }
 
-    .pet-info h2 {
+    .pet-name-tag {
       font-size: 1.35rem;
-      color: var(--text);
+      font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 8px;
     }
 
-    .pet-level-badge {
-      font-size: 0.8rem;
-      background: var(--primary-light);
-      color: #b02a4e;
+    .lvl-badge {
+      font-size: 0.75rem;
+      background: #ffe3ec;
+      color: #d6336c;
       padding: 3px 8px;
-      border-radius: 6px;
-      font-weight: 700;
+      border-radius: 8px;
+      font-weight: 800;
     }
 
     .pet-speech {
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       color: var(--text-muted);
       margin-top: 6px;
       min-height: 22px;
@@ -145,13 +196,13 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px 14px;
-      margin-top: 20px;
+      margin-top: 16px;
       text-align: left;
     }
 
     .stat-box {
       font-size: 0.82rem;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-muted);
     }
 
@@ -162,8 +213,8 @@
     }
 
     .stat-bar-outer {
-      height: 8px;
-      background: #f1f2f6;
+      height: 9px;
+      background: #f1f3f5;
       border-radius: 999px;
       overflow: hidden;
     }
@@ -171,77 +222,109 @@
     .stat-bar-fill {
       height: 100%;
       border-radius: 999px;
-      transition: width 0.35s ease;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .fill-hunger { background-color: #ff9f43; }
-    .fill-happy { background-color: #ff6b81; }
-    .fill-clean { background-color: #54a0ff; }
-    .fill-energy { background-color: #1dd1a1; }
+    .fill-hunger { background: linear-gradient(90deg, #ff922b, #ffa94d); }
+    .fill-happy { background: linear-gradient(90deg, #ff6b81, #ff8787); }
+    .fill-clean { background: linear-gradient(90deg, #4dabf7, #74c0fc); }
+    .fill-energy { background: linear-gradient(90deg, #20c997, #38d9a9); }
 
     /* Action Buttons */
     .actions-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
+      gap: 6px;
       margin-top: 16px;
     }
 
     .action-btn {
-      background: #fdf2f4;
-      border: 1px solid var(--primary-light);
-      border-radius: 12px;
-      padding: 10px 4px;
+      background: #fff0f3;
+      border: 1px solid #ffd5df;
+      border-radius: 14px;
+      padding: 9px 2px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 3px;
       cursor: pointer;
-      transition: all 0.2s ease;
       color: var(--text);
+      transition: transform 0.15s, background 0.15s;
     }
 
-    .action-btn:hover {
-      background: var(--primary-light);
-      transform: translateY(-2px);
+    .action-btn:active {
+      transform: scale(0.92);
+      background: #ffccd5;
     }
 
-    .action-btn span.emoji {
-      font-size: 1.3rem;
+    .action-btn .emoji { font-size: 1.35rem; }
+    .action-btn .label { font-size: 0.72rem; font-weight: 700; }
+    .action-btn .cost { font-size: 0.65rem; color: #c92a2a; font-weight: 800; }
+
+    /* Extra Tabs (Mini-game & Wardrobe) */
+    .sub-features {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
     }
 
-    .action-btn span.label {
-      font-size: 0.72rem;
-      font-weight: 600;
-    }
-
-    .action-btn span.cost {
-      font-size: 0.65rem;
-      color: #9c4257;
+    .sub-btn {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px dashed var(--primary);
+      background: #fff5f7;
+      color: #d6336c;
       font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
 
-    /* Habits Section */
+    /* Habits Box */
     .habits-container {
       background: var(--card-bg);
       border-radius: var(--radius);
-      padding: 20px;
+      padding: 20px 18px;
       box-shadow: var(--shadow);
     }
 
     .section-title {
-      font-size: 1.1rem;
-      font-weight: 700;
+      font-size: 1.05rem;
+      font-weight: 800;
       margin-bottom: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
+    .quick-tags {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+    }
+
+    .tag-btn {
+      background: #f1f3f5;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      color: var(--text);
+    }
+
     .habit-input-form {
       display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
+      gap: 6px;
+      margin-bottom: 14px;
     }
 
     .habit-input {
@@ -249,23 +332,20 @@
       padding: 10px 14px;
       border: 1.5px solid var(--border);
       border-radius: 12px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .habit-input:focus {
-      border-color: var(--primary);
+      background: transparent;
+      color: inherit;
     }
 
     .reward-select {
       border: 1.5px solid var(--border);
       border-radius: 12px;
-      padding: 0 8px;
-      background: white;
-      font-size: 0.85rem;
-      outline: none;
-      color: var(--text);
+      padding: 0 6px;
+      background: transparent;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: inherit;
     }
 
     .btn-add {
@@ -274,24 +354,16 @@
       border: none;
       border-radius: 12px;
       padding: 0 16px;
-      font-weight: 700;
-      cursor: pointer;
+      font-weight: 800;
       font-size: 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.2s;
-    }
-
-    .btn-add:hover {
-      opacity: 0.9;
+      cursor: pointer;
     }
 
     .habit-list {
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
     .habit-item {
@@ -299,228 +371,5 @@
       align-items: center;
       justify-content: space-between;
       padding: 12px 14px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: #fafafa;
-      transition: all 0.2s ease;
-    }
-
-    .habit-item.completed {
-      background: #f4fdf8;
-      border-color: #d1f4e0;
-      opacity: 0.7;
-    }
-
-    .habit-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex: 1;
-    }
-
-    .habit-checkbox {
-      width: 20px;
-      height: 20px;
-      accent-color: var(--success);
-      cursor: pointer;
-    }
-
-    .habit-text {
-      font-size: 0.92rem;
-      font-weight: 500;
-    }
-
-    .habit-item.completed .habit-text {
-      text-decoration: line-through;
-      color: var(--text-muted);
-    }
-
-    .habit-meta {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .points-tag {
-      font-size: 0.75rem;
-      font-weight: 700;
-      background: #fff3c4;
-      color: #996500;
-      padding: 3px 8px;
-      border-radius: 6px;
-    }
-
-    .btn-del {
-      background: none;
-      border: none;
-      color: #d88;
-      font-size: 1.1rem;
-      cursor: pointer;
-      padding: 2px 6px;
-      border-radius: 6px;
-    }
-
-    .btn-del:hover {
-      background: #fee2e2;
-      color: #dc2626;
-    }
-
-    /* Floating Toast */
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: var(--text);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 999px;
-      font-size: 0.88rem;
-      font-weight: 600;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-      transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-      z-index: 1000;
-      pointer-events: none;
-    }
-
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-    }
-  </style>
-</head>
-<body>
-
-  <div class="app-container">
-    <!-- Top Status Bar -->
-    <div class="top-bar">
-      <div>
-        <span style="font-weight: 700; font-size: 1.05rem;">🐾 HabitPet</span>
-      </div>
-      <div class="points-badge">
-        <span>⭐</span>
-        <span id="ptsCounter">0</span>
-        <span style="font-size: 0.75rem; font-weight: 600;">pts</span>
-      </div>
-    </div>
-
-    <!-- Pet Display & Controls -->
-    <div class="pet-card">
-      <div class="pet-stage">
-        <div id="petHat" class="pet-hat"></div>
-        <div id="petAvatar" class="pet-avatar" onclick="petClickReaction()">🐱</div>
-      </div>
+      border: 1.5px solid var(--border);
       
-      <div class="pet-info">
-        <h2>
-          <span id="petName">Mochi</span>
-          <span id="petLvl" class="pet-level-badge">Lvl 1 Baby Cat</span>
-        </h2>
-        <div id="petSpeech" class="pet-speech">"Ready to knock out some goals!"</div>
-      </div>
-
-      <!-- Vitals -->
-      <div class="stats-grid">
-        <div class="stat-box">
-          <div class="stat-header">
-            <span>🍗 Hunger</span>
-            <span id="valHunger">80%</span>
-          </div>
-          <div class="stat-bar-outer">
-            <div id="barHunger" class="stat-bar-fill fill-hunger" style="width: 80%;"></div>
-          </div>
-        </div>
-
-        <div class="stat-box">
-          <div class="stat-header">
-            <span>💖 Happiness</span>
-            <span id="valHappy">75%</span>
-          </div>
-          <div class="stat-bar-outer">
-            <div id="barHappy" class="stat-bar-fill fill-happy" style="width: 75%;"></div>
-          </div>
-        </div>
-
-        <div class="stat-box">
-          <div class="stat-header">
-            <span>🧼 Cleanliness</span>
-            <span id="valClean">90%</span>
-          </div>
-          <div class="stat-bar-outer">
-            <div id="barClean" class="stat-bar-fill fill-clean" style="width: 90%;"></div>
-          </div>
-        </div>
-
-        <div class="stat-box">
-          <div class="stat-header">
-            <span>⚡ Energy</span>
-            <span id="valEnergy">60%</span>
-          </div>
-          <div class="stat-bar-outer">
-            <div id="barEnergy" class="stat-bar-fill fill-energy" style="width: 60%;"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Action Pad -->
-      <div class="actions-grid">
-        <button class="action-btn" onclick="careAction('feed', 10)">
-          <span class="emoji">🐟</span>
-          <span class="label">Feed</span>
-          <span class="cost">10 pts</span>
-        </button>
-
-        <button class="action-btn" onclick="careAction('play', 15)">
-          <span class="emoji">🎾</span>
-          <span class="label">Play</span>
-          <span class="cost">15 pts</span>
-        </button>
-
-        <button class="action-btn" onclick="careAction('shower', 10)">
-          <span class="emoji">🚿</span>
-          <span class="label">Shower</span>
-          <span class="cost">10 pts</span>
-        </button>
-
-        <button class="action-btn" onclick="careAction('walk', 20)">
-          <span class="emoji">🌲</span>
-          <span class="label">Walk</span>
-          <span class="cost">20 pts</span>
-        </button>
-
-        <button class="action-btn" onclick="upgradePet()">
-          <span class="emoji">👑</span>
-          <span class="label">Upgrade</span>
-          <span id="upgCost" class="cost">50 pts</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Habit Manager -->
-    <div class="habits-container">
-      <div class="section-title">
-        <span>Today's Habits & Tasks</span>
-        <button onclick="resetDailyChecks()" style="background: none; border: none; font-size: 0.8rem; color: var(--primary); cursor: pointer; font-weight: 600;">Reset Checks</button>
-      </div>
-
-      <form class="habit-input-form" onsubmit="addHabit(event)">
-        <input 
-          id="habitTitle" 
-          type="text" 
-          class="habit-input" 
-          placeholder="Add habit (e.g. Drink 2L water)..." 
-          required 
-        />
-        <select id="habitPoints" class="reward-select">
-          <option value="10">+10 pt</option>
-          <option value="20" selected>+20 pt</option>
-          <option value="30">+30 pt</option>
-          <option value="50">+50 pt</option>
-        </select>
-        <button type="submit" class="btn-add">+</button>
-      </form>
-
-      <ul id="habitList" class="habit-list"></ul>
-    </div>
-  </div>
-
-  <div id="toast" class="toast">Action
